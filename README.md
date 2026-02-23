@@ -52,7 +52,7 @@ check, but this requires no patching of any library internals.
 Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/OpenEuroLLM/patch_opensci
 cd patch-opensci
 uv sync          # installs transformers==4.48.0 + torch + huggingface_hub
 ```
@@ -87,6 +87,30 @@ uv run --with transformers==5.2.0 python inference.py --model_path ./open-sci-re
 ```
 
 > The capital of France is Paris, the largest city of France.\nThe capital of France, the country of France, the country of France, the country of France, the country of France, the country of the country of the country of the capital of the capital of the
+
+The differences are small likely due to ROPE slight difference of default implementations.
+
+Looking at the logit of 4.48.0, 4.57.6 and 5.2.0, we have the final logit for the first two tokens:
+ 
+  ┌─────────┬──────────────┬──────────┬──────────────────┐
+  │ Version │  Paris logit │ #2 logit │       gap        │
+  ├─────────┼──────────────┼──────────┼──────────────────┤
+  │ 4.48.0  │ 13.0544      │ 10.1476  │ 2.91             │
+  ├─────────┼──────────────┼──────────┼──────────────────┤
+  │ 4.57.6  │ 13.0544      │ 10.1476  │ 2.91 (identical) │
+  ├─────────┼──────────────┼──────────┼──────────────────┤
+  │ 5.2.0   │ 12.3956      │ 9.7126   │ 2.68             │
+  └─────────┴──────────────┴──────────┴──────────────────┘
+
+- 4.48.0 and 4.57.6 are bit-for-bit identical — same attention backend, same ROPE math
+- 5.2.0 logits are ~0.66 lower across the board — the inlined ROPE fallback produces slightly different position encodings than the original "default" implementation
+- The relative ordering of top tokens also shifts slightly, which explains why the generated text diverges after the first token
+
+---
+
+## Evaluation
+
+We evaluate the model for 
 
 ---
 
