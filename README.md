@@ -3,7 +3,7 @@
 Compatibility patches and inference tooling for the models of open-sci-ref-001, for instance
 [open-sci/open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384](https://huggingface.co/open-sci/open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384)
 
-This allows running those models across a wide range of `transformers` versions (4.48 – 4.57 and 5.2+).
+This allows running those models on recent version of `transformers` e.g. 5.2+.
 
 To convert a checkpoint for use with `transformers` 5.2+:
 
@@ -21,9 +21,7 @@ The `open-sci` model was authored against a development snapshot of
 `transformers` that introduced several APIs which break loading under both
 older (4.x) and newer (5.x) released versions.
 
-### `hotfix_opensci.py` — static file patch
-
-Copies `<src_dir>` to `<src_dir>_fixed` and rewrites every `modeling_*.py`
+Running `hotfix_opensci.py` copies `<src_dir>` to `<src_dir>_fixed` and rewrites every `modeling_*.py`
 inside it, producing a model that loads cleanly with transformers 5.2+ without
 any runtime patching:
 
@@ -32,13 +30,9 @@ any runtime patching:
 | `LossKwargs` removed | 5.0+ | Replace every occurrence of `LossKwargs` with `TransformersKwargs` |
 | `ROPE_INIT_FUNCTIONS["default"]` removed | 5.0+ | Inline a fallback `_default_rope_init` function |
 | `_tied_weights_keys` must be a `dict` | 5.0+ | Convert `["lm_head.weight"]` → `{"lm_head.weight": "model.embed_tokens.weight"}` |
+| SDPA `enable_gqa=True` added for all MHA | 5.0+ | Inline a version-stable SDPA wrapper that never passes `enable_gqa` |
+| Non-persistent `inv_freq` buffer zeroed on meta-device load | 5.0+ | Add a guard in `forward` that re-computes `inv_freq` from `rope_init_fn` if all-zero |
 
-Usage:
-
-```bash
-# produces ./open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384_fixed
-uv run python hotfix_opensci.py --src_dir ./open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384
-```
 
 ### `inference.py` — minimal 4.x shim
 
@@ -94,12 +88,10 @@ uv run python hotfix_opensci.py --src_dir ./open-sci-ref-v0.01-1.7b-nemotron-hq-
 uv run --with transformers==5.2.0 python inference.py --model_path ./open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384_fixed
 ```
 
-> The capital of France is Paris, the largest city of France.\nThe capital of France, the country of France, the country of France, the country of France, the country of France, the country of the country of the country of the capital of the capital of the
+> The capital of France is Paris.
 
-The differences are small likely due to ROPE slight difference of default implementations.
+The hotfix-patched model produces bit-for-bit identical logits across all supported versions:
 
-Looking at the logit of 4.48.0, 4.57.6 and 5.2.0, we have the final logit for the first two tokens:
- 
   ┌─────────┬──────────────┬──────────┬──────────────────┐
   │ Version │  Paris logit │ #2 logit │       gap        │
   ├─────────┼──────────────┼──────────┼──────────────────┤
@@ -107,12 +99,10 @@ Looking at the logit of 4.48.0, 4.57.6 and 5.2.0, we have the final logit for th
   ├─────────┼──────────────┼──────────┼──────────────────┤
   │ 4.57.6  │ 13.0544      │ 10.1476  │ 2.91 (identical) │
   ├─────────┼──────────────┼──────────┼──────────────────┤
-  │ 5.2.0   │ 12.3956      │ 9.7126   │ 2.68             │
+  │ 5.2.0   │ 13.0544      │ 10.1476  │ 2.91 (identical) │
   └─────────┴──────────────┴──────────┴──────────────────┘
 
-- 4.48.0 and 4.57.6 are bit-for-bit identical — same attention backend, same ROPE math
-- 5.2.0 logits are ~0.66 lower across the board — the inlined ROPE fallback produces slightly different position encodings than the original "default" implementation
-- The relative ordering of top tokens also shifts slightly, which explains why the generated text diverges after the first token
+All three versions are bit-for-bit identical after the hotfix.
 
 ---
 
