@@ -53,7 +53,7 @@ Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
 git clone https://github.com/OpenEuroLLM/patch_opensci
-cd patch-opensci
+cd patch_opensci
 uv sync          # installs transformers==4.48.0 + torch + huggingface_hub
 ```
 
