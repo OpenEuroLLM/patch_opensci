@@ -5,6 +5,14 @@ Compatibility patches and inference tooling for the models of open-sci-ref-001, 
 
 This allows running those models across a wide range of `transformers` versions (4.48 – 4.57 and 5.2+).
 
+To convert a checkpoint for use with `transformers` 5.2+:
+
+```bash
+git clone https://github.com/OpenEuroLLM/patch_opensci && cd patch_opensci
+uv run python download_model.py
+uv run python hotfix_opensci.py --src_dir ./open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384
+```
+
 ---
 
 ## What the hotfix does
