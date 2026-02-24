@@ -92,6 +92,7 @@ uv run --with transformers==5.2.0 python inference.py --model_path ./open-sci-re
 
 The hotfix-patched model produces bit-for-bit identical logits across all supported versions:
 
+```
   ┌─────────┬──────────────┬──────────┬──────────────────┐
   │ Version │  Paris logit │ #2 logit │       gap        │
   ├─────────┼──────────────┼──────────┼──────────────────┤
@@ -101,6 +102,7 @@ The hotfix-patched model produces bit-for-bit identical logits across all suppor
   ├─────────┼──────────────┼──────────┼──────────────────┤
   │ 5.2.0   │ 13.0544      │ 10.1476  │ 2.91 (identical) │
   └─────────┴──────────────┴──────────┴──────────────────┘
+```
 
 All three versions are bit-for-bit identical after the hotfix.
 
