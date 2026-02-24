@@ -108,7 +108,17 @@ All three versions are bit-for-bit identical after the hotfix.
 
 ## Evaluation
 
-We evaluate the model for 
+We evaluate the model fix:
+
+```
+                                                       arc_challenge  arc_easy     boolq  commonsense_qa  copa  hellaswag  lambada_openai      mmlu  openbookqa      piqa  social_iqa  winogrande
+open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384_fixed_new       0.512799  0.800505  0.793578        0.624079  0.83   0.724358        0.598292  0.508125        0.43  0.789445    0.444217    0.636938                                     
+open-sci-ref-v0.01-1.7b-nemotron-hq-1T-16384_original        0.485495  0.787458  0.762080        0.314496  0.80   0.687313        0.566854  0.396169        0.39  0.772579         NaN    0.621152                                     
+```
+
+where `_original` is the results reported in opensci-ref models obtained with transformer version bellow 4.48 and
+`_fixed_new` is used to indicate the model fixed with this patch evaluated with 5.2.0 transformers version.  
+
 
 ---
 
